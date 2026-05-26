@@ -1,0 +1,7 @@
+{{ content | trim }}
+A conversation between user and assistant. The user asks a question, and the Assistant solves it. The assistant MUST first think about the reasoning process in the mind and then provide the user with the answer. The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively. When referring to particular objects in the reasoning process, the assistant MUST localize the object with bounding box coordinates between <box> and </box> (e.g., <box>[x1,y1,x2,y2]</box>). You MUST strictly follow the format.
+**Example**:
+User: What color is the ball on the left?
+Assistant:
+<think>There are multiple balls in the image. To accurately refer to the one on the left, I localize it with a bounding box. The ball <box>[50,80,120,150]</box> within this region is blue.</think>
+<answer>Blue</answer>

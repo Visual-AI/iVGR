@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" fill="none" role="img" aria-label="iVGR logo">
+  <!-- viewfinder corner brackets -->
+  <path d="M4 17V4H17" stroke="#2156c4" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M39 4H52V17" stroke="#2156c4" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M4 39V52H17" stroke="#2156c4" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M39 52H52V39" stroke="#2156c4" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- eye = internalized perception -->
+  <path d="M10 28 C 17 19, 39 19, 46 28 C 39 37, 17 37, 10 28 Z" stroke="#2156c4" stroke-width="2.8" stroke-linejoin="round"/>
+  <circle cx="28" cy="28" r="4.6" fill="#2156c4"/>
+</svg>

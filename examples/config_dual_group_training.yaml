@@ -1,0 +1,126 @@
+# Dual-group training configuration
+# Group A: grounding prompt (outputs box)
+# Group B: math prompt (no box)
+#
+# Note: Since the dataset is doubled, rollout_batch_size should be halved
+# to keep the same number of unique samples per batch
+
+data:
+  train_files: allencbzhang/iVGR-RL-51K
+  val_files: allencbzhang/iVGR-RL-51K
+  prompt_key: problem
+  answer_key: answer
+  image_key: images
+  video_key: videos
+  image_dir: ../../data/merged_data
+  video_fps: 2.0
+  max_prompt_length: 8192
+  max_response_length: 8192
+  # Dataset is doubled, so batch_size is adjusted to keep the same number of unique samples
+  rollout_batch_size: 512  # Originally 512, halved to keep the same number of unique samples
+  mini_rollout_batch_size: null
+  val_batch_size: 512
+  format_prompt: ./examples/format_prompt/adagrounding_thyme_v32_given_proposals_mixed_data_userprompt.jinja
+  override_chat_template: null
+  shuffle: true
+  seed: 2025
+  min_pixels: 3136
+  max_pixels: 3211264
+  filter_overlong_prompts: false
+  # Mixed-data sampling ratio: 70% paired A/B, 30% single (thinklite)
+  # Ensures Group A and Group B are paired one-to-one in each batch
+  paired_ratio: 0.9
+
+algorithm:
+  adv_estimator: grpo
+  disable_kl: false
+  use_kl_loss: true
+  kl_penalty: low_var_kl
+  kl_coef: 1.0e-2
+  online_filtering: false
+  filter_key: overall
+  filter_low: 0.01
+  filter_high: 0.99
+
+worker:
+  actor:
+    global_batch_size: 128
+    micro_batch_size_per_device_for_update: 1
+    micro_batch_size_per_device_for_experience: 4
+    max_grad_norm: 1.0
+    padding_free: true
+    dynamic_batching: true
+    ulysses_size: 1
+    clip_ratio_low: 0.2
+    clip_ratio_high: 0.28
+    model:
+      model_path: allencbzhang/iVGR-Qwen2.5-VL-7B-SFT
+      enable_gradient_checkpointing: true
+      trust_remote_code: false
+      freeze_vision_tower: false
+    optim:
+      lr: 1.0e-6
+      weight_decay: 1.0e-2
+      strategy: adamw_bf16
+      lr_warmup_ratio: 0.02
+    fsdp:
+      enable_full_shard: true
+      enable_cpu_offload: false
+      enable_rank0_init: true
+      torch_dtype: bf16
+    offload:
+      offload_params: true
+      offload_optimizer: true
+
+  rollout:
+    n: 5  # 5 rollouts per prompt
+    temperature: 1.0
+    top_p: 0.99
+    limit_images: 0
+    gpu_memory_utilization: 0.8
+    enforce_eager: false
+    enable_chunked_prefill: false
+    tensor_parallel_size: 2
+    disable_tqdm: false
+    max_num_batched_tokens: 32768
+    val_override_config:
+      temperature: 0.01
+      top_p: 0.01
+      n: 1
+
+  ref:
+    fsdp:
+      enable_full_shard: true
+      enable_cpu_offload: true
+      enable_rank0_init: true
+    offload:
+      offload_params: false
+
+  reward:
+    reward_type: batch
+    # Use the dual-group training reward function
+    reward_function: ./examples/reward_function/adagrounding_dual_group_training.py:ours_compute_score
+    reward_function_kwargs:
+      json_log_dir: ./checkpoints/json_log/
+      json_log_enabled: true
+
+trainer:
+  total_epochs: 5
+  max_steps: null
+  project_name: ablation
+  experiment_name: dual_group_training
+  logger: ["console","wandb","tensorboard"]
+  nnodes: 1
+  n_gpus_per_node: 8
+  max_try_make_batch: 20
+  val_freq: -1
+  val_before_train: false
+  val_only: false
+  val_generations_to_log: 20
+  save_freq: 40
+  save_limit: -1
+  save_model_only: false
+  save_checkpoint_path: null
+  load_checkpoint_path: null
+  find_last_checkpoint: true
+
